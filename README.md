@@ -35,6 +35,7 @@ titles:
   - "Work App"
   - "Side Project"
 ```
+*Note: The `author` field must have either the name or email you commit with, it's used to get `your` commits from your repos.*
 *Note: The number of `repos` must match the number of `titles`.*
 
 3. **Initialize the tool:**
