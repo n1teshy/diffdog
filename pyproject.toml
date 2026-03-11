@@ -1,0 +1,14 @@
+[project]
+name = "diffdog"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "groq>=1.1.1",
+    "pyperclip>=1.11.0",
+    "pyyaml>=6.0.3",
+]
+
+[project.scripts]
+bark = "diffdog.__main__:main"
