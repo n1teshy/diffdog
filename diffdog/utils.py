@@ -74,7 +74,12 @@ def get_commits(config: Config) -> str:
 
         try:
             run = subprocess.run(
-                ["git", "log", "--since=midnight", f"--author={config.author}"],
+                [
+                    "git",
+                    "log",
+                    "--since=midnight",
+                    f"--author={config.author}",
+                ],
                 capture_output=True,
                 text=True,
             )
@@ -119,5 +124,7 @@ def describe_commits(commits: str, config: Config, notes: list[str]) -> str:
         {"role": "system", "content": config.instruction or instruction},
         {"role": "user", "content": commits},
     ]
-    response = client.chat.completions.create(messages=messages, model=config.model)
+    response = client.chat.completions.create(
+        messages=messages, model=config.model
+    )
     return response.choices[0].message.content

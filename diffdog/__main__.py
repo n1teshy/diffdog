@@ -25,7 +25,9 @@ def main():
 
         config = load_config()
         commits = get_commits(config)
-        description = describe_commits(commits, config, options.note or config.notes)
+        description = describe_commits(
+            commits, config, options.note or config.notes
+        )
         if options.no_copy or config.no_copy:
             print(description + "\n")
         else:

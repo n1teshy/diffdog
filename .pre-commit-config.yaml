@@ -11,5 +11,6 @@ repos:
     rev: v0.9.4
     hooks:
       - id: ruff
-        args: [--fix, --extend-select=I, --extend-select=ARG]
+        args: [--fix, --extend-select=I, --extend-select=ARG, --line-length=79]
       - id: ruff-format
+        args: [--line-length=79]
