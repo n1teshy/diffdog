@@ -19,6 +19,7 @@ class Config:
     groq_key: str
     model: str = "llama-3.3-70b-versatile"
     instruction: str | None = None
+    notes: list[str] = list
     no_copy: bool = False
 
 
@@ -93,9 +94,9 @@ def get_commits(config: Config) -> str:
     return "".join(logs)
 
 
-def describe_commits(commits: str, config: Config) -> str:
+def describe_commits(commits: str, config: Config, notes: list[str]) -> str:
     client = Groq(api_key=config.groq_key)
-    instructon = (
+    instruction = (
         "You are a bot assisting a software engineer write daily "
         "updates, you will be given their commmits for today and "
         "you need to summarize it. Create logical sections for all "
@@ -103,17 +104,19 @@ def describe_commits(commits: str, config: Config) -> str:
         "use this format:\n"
         "Updates, <today_date>\n\n<repo_title>\n  1. did fizz\n  2. did buzz"
         "\n\n <repo_title>\n  3. did foom\n\n"
-        "commits or the fallback response in the absence of commits.\n\n"
         "NOTE: the updates must be in past tense as opposed to the "
         "(most probably) imperative commit messages\n"
         'NOTE: say "Updates <today_date>\n\nno updates today" if there '
         "were no commits today, follow the format (newlines) strictly\n"
         "NOTE: Do NOT respond with anything other than the summary of the"
         "NOTE: sort the updates in the descending order of significance\n"
-        f"NOTE: the date today is {datetime.now().strftime('%d %b %Y')}"
+        f"NOTE: the date today is {datetime.now().strftime('%d %b %Y')}\n"
     )
+    for note in notes:
+        instruction += f"NOTE: {note}\n"
+
     messages = [
-        {"role": "system", "content": config.instruction or instructon},
+        {"role": "system", "content": config.instruction or instruction},
         {"role": "user", "content": commits},
     ]
     response = client.chat.completions.create(messages=messages, model=config.model)

@@ -34,6 +34,8 @@ repos:
 titles:
   - "Work App"
   - "Side Project"
+notes: # Optional
+  - "The updates must sound like a rap"
 ```
 *Note: The `author` field must have either the name or email you commit with, it's used to get `your` commits from your repos.*
 *Note: The number of `repos` must match the number of `titles`.*
@@ -55,6 +57,11 @@ bark
 **Print summary without copying to clipboard:**
 ```bash
 bark --no-copy
+```
+
+**Pass notes to the bot to customize the summary:**
+```bash
+bark --note "The updates must sound like a rap"
 ```
 
 **View current configuration:**
