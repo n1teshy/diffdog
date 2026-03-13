@@ -17,7 +17,7 @@ class Config:
     repos: list[str]
     titles: list[str]
     groq_key: str
-    model: str = "llama-3.3-70b-versatile"
+    model: str = "openai/gpt-oss-120b"
     instruction: str | None = None
     notes: list[str] = field(default_factory=list)
     no_copy: bool = False
