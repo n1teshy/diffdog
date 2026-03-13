@@ -1,7 +1,7 @@
 import os.path
 import shutil
 import subprocess
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 
 import yaml
@@ -19,7 +19,7 @@ class Config:
     groq_key: str
     model: str = "llama-3.3-70b-versatile"
     instruction: str | None = None
-    notes: list[str] = list
+    notes: list[str] = field(default_factory=list)
     no_copy: bool = False
 
 
