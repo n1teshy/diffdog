@@ -28,7 +28,7 @@ def main():
         config = load_config()
 
         if options.repo:
-            add_repo(options.repo, options.title, config)
+            add_repo(options.repo, options.title, options.branch, config)
             sys.exit()
 
         if options.rm_repo:
@@ -44,6 +44,7 @@ def main():
         else:
             clip.copy(description)
     except Exception as e:
+        raise
         parser.error(e)
 
 

@@ -16,10 +16,13 @@ parser.add_argument(
     default=[],
 )
 parser.add_argument(
-    "--repo", nargs="?", const=".", help="Add the current repo to the config"
+    "--repo", nargs="?", const=".", help="Register this repository"
 )
 parser.add_argument(
-    "--title", help="Use this title for the new repo being registered"
+    "--title", help="Use this title for the new repository being registered"
+)
+parser.add_argument(
+    "--branch", help="Use this branch for the new repository being registered"
 )
 parser.add_argument(
     "--rm-repo",

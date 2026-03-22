@@ -3,6 +3,7 @@ import shutil
 import subprocess
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
+from typing import Union
 
 import yaml
 from groq import Groq
@@ -32,12 +33,40 @@ def get_conf_content() -> str:
         return f.read()
 
 
-def copy_config(file: str):
-    shutil.copy2(file, conf_file)
-
-
 def is_repo(path: str):
     return os.path.isdir(os.path.join(path, ".git"))
+
+
+def copy_config(file: str):
+    with open(file, "r", encoding="utf-8") as f:
+        conf_data = yaml.safe_load(f)
+
+    repos = conf_data.get("repos", None)
+    titles = conf_data.get("titles", None)
+    if repos is None or titles is None:
+        raise ValueError("Config file is missing repos and/or titles")
+    if type(repos) is not list or type(titles) is not list:
+        raise TypeError("Repos and titles must be lists")
+    if len(repos) != len(titles):
+        raise ValueError("Number of repos must equal number of titles")
+
+    for idx in range(len(repos)):
+        if type(repos[idx]) is str:
+            repos[idx] = {
+                "path": normalize_path(repos[idx]),
+                "branch": "main",
+            }
+        else:
+            repos[idx] = {
+                **repos[idx],
+                "path": normalize_path(repos[idx]["path"]),
+            }
+
+    conf_data["repos"] = repos
+    with open(file, "w", encoding="utf-8") as f:
+        yaml.safe_dump(conf_data, f)
+
+    shutil.copy2(file, conf_file)
 
 
 def load_config() -> Config:
@@ -48,12 +77,6 @@ def load_config() -> Config:
         conf_data = yaml.safe_load(f)
 
     config = Config(**conf_data)
-    if len(config.repos) != len(config.titles):
-        msg = "Number of repos in the config must be equal to the number of titles"
-        raise ValueError(msg)
-
-    for idx in range(len(config.repos)):
-        config.repos[idx] = normalize_path(config.repos[idx])
     return config
 
 
@@ -62,9 +85,10 @@ def dump_config(config: Config):
         yaml.safe_dump(asdict(config), f)
 
 
-def add_repo(path: str, title: str, config: Config):
+def add_repo(path: str, title: str, branch: Union[str, None], config: Config):
     path = normalize_path(path)
-    if path in config.repos:
+    branch = branch or "main"
+    if any(repo["path"] == path for repo in config.repos):
         raise ValueError(f"{path} is already registered")
 
     if not is_repo(path):
@@ -72,18 +96,35 @@ def add_repo(path: str, title: str, config: Config):
     if not title:
         raise ValueError("A title for the new repo is required")
 
-    config.repos.append(path)
+    exists = (
+        subprocess.call(
+            ["git", "rev-parse", "--verify", branch],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            cwd=path,
+        )
+        == 0
+    )
+    if not exists:
+        raise ValueError(f"Branch '{branch}' does not exist")
+
+    config.repos.append({"path": path, "branch": branch})
     config.titles.append(title)
     dump_config(config)
 
 
 def remove_repo(path: str, config: Config):
     path = normalize_path(path)
-    if path not in config.repos:
+    idx = next(
+        (i for i, repo in enumerate(config.repos) if repo["path"] == path),
+        None,
+    )
+    if not idx:
         raise ValueError(f"{path} is not registered")
 
-    idx = config.repos.index(path)
-    config.repos = [repo for repo in config.repos if repo != path]
+    config.repos = [
+        repo for r_idx, repo in enumerate(config.repos) if r_idx != idx
+    ]
     config.titles = [
         title for t_idx, title in enumerate(config.titles) if t_idx != idx
     ]
@@ -91,34 +132,31 @@ def remove_repo(path: str, config: Config):
 
 
 def get_commits(config: Config) -> str:
-    cwd, logs = os.getcwd(), []
+    logs = []
     for idx in range(len(config.repos)):
-        repo, title = config.repos[idx], config.titles[idx]
-        os.chdir(repo)
+        title = config.titles[idx]
+        run = subprocess.run(
+            [
+                "git",
+                "log",
+                config.repos[idx]["branch"],
+                "--since=midnight",
+                f"--author={config.author}",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=config.repos[idx]["path"],
+        )
+        if run.returncode != 0:
+            print(run.stderr)
+            break
 
-        try:
-            run = subprocess.run(
-                [
-                    "git",
-                    "log",
-                    "--since=midnight",
-                    f"--author={config.author}",
-                ],
-                capture_output=True,
-                text=True,
-            )
-            if run.returncode != 0:
-                print(run.stderr)
-                break
+        if not run.stdout:
+            continue
 
-            if not run.stdout:
-                continue
-
-            logs.append(f"title: {title}\n---\n\n")
-            logs.append(run.stdout)
-            logs.append("\n-----\n\n\n")
-        finally:
-            os.chdir(cwd)
+        logs.append(f"title: {title}\n---\n\n")
+        logs.append(run.stdout)
+        logs.append("\n-----\n\n\n")
 
     return "".join(logs)
 

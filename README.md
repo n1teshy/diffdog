@@ -77,6 +77,12 @@ bark --note "The updates must sound like a rap"
 bark --repo ~/path/to/repo --title "A project of mine"
 ```
 
+**Register a repo with a perferred branch (defaults to main):**
+
+```bash
+bark --repo ~/path/to/repo --title "A project of mine" --branch some-branch
+```
+
 **Unregister a repo (not specifying a path unregisters the current directory):**
 
 ```bash
