@@ -43,7 +43,7 @@ def main():
             print(description + "\n")
         else:
             clip.copy(description)
-    except TypeError as e:
+    except Exception as e:
         parser.error(e)
 
 

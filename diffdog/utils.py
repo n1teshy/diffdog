@@ -42,27 +42,19 @@ def is_repo(path: str):
 
 def load_config() -> Config:
     if not os.path.isfile(conf_file):
-        raise TypeError("Config file not found")
+        raise FileNotFoundError("Config file not found")
 
-    try:
-        with open(conf_file, encoding="utf-8") as f:
-            conf_data = yaml.safe_load(f)
+    with open(conf_file, encoding="utf-8") as f:
+        conf_data = yaml.safe_load(f)
 
-        config = Config(**conf_data)
-        if len(config.repos) != len(config.titles):
-            msg = "Number of repos in the config must be equal to the number of titles"
-            raise TypeError(msg)
+    config = Config(**conf_data)
+    if len(config.repos) != len(config.titles):
+        msg = "Number of repos in the config must be equal to the number of titles"
+        raise ValueError(msg)
 
-        for idx in range(len(config.repos)):
-            config.repos[idx] = normalize_path(config.repos[idx])
-        return config
-    except TypeError:
-        msg = (
-            "Invalid or missnig keys in the YAML config file, "
-            "please ensure (only) 'author', 'repos', 'titles' "
-            "and 'groq_key' fields"
-        )
-        raise TypeError(msg)
+    for idx in range(len(config.repos)):
+        config.repos[idx] = normalize_path(config.repos[idx])
+    return config
 
 
 def dump_config(config: Config):
@@ -71,14 +63,14 @@ def dump_config(config: Config):
 
 
 def add_repo(path: str, title: str, config: Config):
-    path = os.path.abspath(path)
+    path = normalize_path(path)
     if path in config.repos:
-        raise TypeError(f"{path} is already registered")
+        raise ValueError(f"{path} is already registered")
 
     if not is_repo(path):
-        raise TypeError(f"{path} is not a git repository")
+        raise ValueError(f"{path} is not a git repository")
     if not title:
-        raise TypeError("A title for the new repo is required")
+        raise ValueError("A title for the new repo is required")
 
     config.repos.append(path)
     config.titles.append(title)
@@ -86,9 +78,9 @@ def add_repo(path: str, title: str, config: Config):
 
 
 def remove_repo(path: str, config: Config):
-    path = os.path.abspath(path)
+    path = normalize_path(path)
     if path not in config.repos:
-        raise TypeError(f"{path} is not registered")
+        raise ValueError(f"{path} is not registered")
 
     idx = config.repos.index(path)
     config.repos = [repo for repo in config.repos if repo != path]
