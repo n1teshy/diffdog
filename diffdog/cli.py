@@ -16,6 +16,18 @@ parser.add_argument(
     default=[],
 )
 parser.add_argument(
+    "--repo", nargs="?", const=".", help="Add the current repo to the config"
+)
+parser.add_argument(
+    "--title", help="Use this title for the new repo being registered"
+)
+parser.add_argument(
+    "--rm-repo",
+    nargs="?",
+    const=".",
+    help="Remove (unregister) this repository",
+)
+parser.add_argument(
     "--no-copy", action="store_true", help="Don't copy summary to clipboard"
 )
 parser.add_argument(

@@ -4,11 +4,13 @@ import pyperclip as clip
 
 from diffdog.cli import parse
 from diffdog.utils import (
+    add_repo,
     copy_config,
     describe_commits,
     get_commits,
     get_conf_content,
     load_config,
+    remove_repo,
 )
 
 
@@ -24,6 +26,15 @@ def main():
             sys.exit()
 
         config = load_config()
+
+        if options.repo:
+            add_repo(options.repo, options.title, config)
+            sys.exit()
+
+        if options.rm_repo:
+            remove_repo(options.rm_repo, config)
+            sys.exit()
+
         commits = get_commits(config)
         description = describe_commits(
             commits, config, options.note or config.notes

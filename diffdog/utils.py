@@ -36,6 +36,10 @@ def copy_config(file: str):
     shutil.copy2(file, conf_file)
 
 
+def is_repo(path: str):
+    return os.path.isdir(os.path.join(path, ".git"))
+
+
 def load_config() -> Config:
     if not os.path.isfile(conf_file):
         raise TypeError("Config file not found")
@@ -64,6 +68,34 @@ def load_config() -> Config:
 def dump_config(config: Config):
     with open(conf_file, "w", encoding="utf-8") as f:
         yaml.safe_dump(asdict(config), f)
+
+
+def add_repo(path: str, title: str, config: Config):
+    path = os.path.abspath(path)
+    if path in config.repos:
+        raise TypeError(f"{path} is already registered")
+
+    if not is_repo(path):
+        raise TypeError(f"{path} is not a git repository")
+    if not title:
+        raise TypeError("A title for the new repo is required")
+
+    config.repos.append(path)
+    config.titles.append(title)
+    dump_config(config)
+
+
+def remove_repo(path: str, config: Config):
+    path = os.path.abspath(path)
+    if path not in config.repos:
+        raise TypeError(f"{path} is not registered")
+
+    idx = config.repos.index(path)
+    config.repos = [repo for repo in config.repos if repo != path]
+    config.titles = [
+        title for t_idx, title in enumerate(config.titles) if t_idx != idx
+    ]
+    dump_config(config)
 
 
 def get_commits(config: Config) -> str:
